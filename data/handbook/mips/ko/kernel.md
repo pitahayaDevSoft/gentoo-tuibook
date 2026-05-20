@@ -1,0 +1,449 @@
+# Kernel
+
+Other languages:
+
+- [Deutsch](/wiki/Handbook:MIPS/Installation/Kernel/de "Handbuch:MIPS/Installation/Kernel (100% translated)")
+- [English](/wiki/Handbook:MIPS/Installation/Kernel "Handbook:MIPS/Installation/Kernel (100% translated)")
+- [español](/wiki/Handbook:MIPS/Installation/Kernel/es "Manual de Gentoo: MIPS/Instalación/Núcleo (100% translated)")
+- [français](/wiki/Handbook:MIPS/Installation/Kernel/fr "Handbook:MIPS/Installation/Kernel/fr (100% translated)")
+- [italiano](/wiki/Handbook:MIPS/Installation/Kernel/it "Handbook:MIPS/Installation/Kernel/it (100% translated)")
+- [magyar](/wiki/Handbook:MIPS/Installation/Kernel/hu "Handbook:MIPS/Installation/Kernel/hu (100% translated)")
+- [polski](/wiki/Handbook:MIPS/Installation/Kernel/pl "Handbook:MIPS/Installation/Kernel (100% translated)")
+- [português do Brasil](/wiki/Handbook:MIPS/Installation/Kernel/pt-br "Manual:MIPS/Instalação/Kernel (100% translated)")
+- [русский](/wiki/Handbook:MIPS/Installation/Kernel/ru "Handbook:MIPS/Installation/Kernel (100% translated)")
+- [தமிழ்](/wiki/Handbook:MIPS/Installation/Kernel/ta "கையேடு:MIPS/நிறுவல்/கர்னல் (100% translated)")
+- [中文（中国大陆）‎](/wiki/Handbook:MIPS/Installation/Kernel/zh-cn "手册：MIPS/安装/配置Linux内核 (100% translated)")
+- [日本語](/wiki/Handbook:MIPS/Installation/Kernel/ja "ハンドブック:MIPS/インストール/カーネル (100% translated)")
+- 한국어
+
+[MIPS 핸드북](/wiki/Handbook:MIPS/ko "Handbook:MIPS/ko")[설치](/wiki/Handbook:MIPS/Full/Installation/ko "Handbook:MIPS/Full/Installation/ko")[설치 정보](/wiki/Handbook:MIPS/Installation/About/ko "Handbook:MIPS/Installation/About/ko")[매체 선택](/wiki/Handbook:MIPS/Installation/Media/ko "Handbook:MIPS/Installation/Media/ko")[네트워크 설정](/wiki/Handbook:MIPS/Installation/Networking/ko "Handbook:MIPS/Installation/Networking/ko")[디스크 준비](/wiki/Handbook:MIPS/Installation/Disks/ko "Handbook:MIPS/Installation/Disks/ko")[스테이지 3 설치](/wiki/Handbook:MIPS/Installation/Stage/ko "Handbook:MIPS/Installation/Stage/ko")[베이스 시스템 설치](/wiki/Handbook:MIPS/Installation/Base/ko "Handbook:MIPS/Installation/Base/ko")커널 설정[시스템 설정](/wiki/Handbook:MIPS/Installation/System/ko "Handbook:MIPS/Installation/System/ko")[도구 설치](/wiki/Handbook:MIPS/Installation/Tools/ko "Handbook:MIPS/Installation/Tools/ko")[부트로더 설정](/wiki/Handbook:MIPS/Installation/Bootloader/ko "Handbook:MIPS/Installation/Bootloader/ko")[마무리](/wiki/Handbook:MIPS/Installation/Finalizing/ko "Handbook:MIPS/Installation/Finalizing/ko")[젠투 활용](/wiki/Handbook:MIPS/Full/Working/ko "Handbook:MIPS/Full/Working/ko")[포티지 소개](/wiki/Handbook:MIPS/Working/Portage/ko "Handbook:MIPS/Working/Portage/ko")[USE 플래그](/wiki/Handbook:MIPS/Working/USE/ko "Handbook:MIPS/Working/USE/ko")[포티지 기능](/wiki/Handbook:MIPS/Working/Features/ko "Handbook:MIPS/Working/Features/ko")[초기화 스크립트 시스템](/wiki/Handbook:MIPS/Working/Initscripts/ko "Handbook:MIPS/Working/Initscripts/ko")[환경 변수](/wiki/Handbook:MIPS/Working/EnvVar/ko "Handbook:MIPS/Working/EnvVar/ko")[포티지 활용](/wiki/Handbook:MIPS/Full/Portage/ko "Handbook:MIPS/Full/Portage/ko")[파일 및 디렉터리](/wiki/Handbook:MIPS/Portage/Files/ko "Handbook:MIPS/Portage/Files/ko")[변수](/wiki/Handbook:MIPS/Portage/Variables/ko "Handbook:MIPS/Portage/Variables/ko")[소프트웨어 브랜치 함께 사용하기](/wiki/Handbook:MIPS/Portage/Branches/ko "Handbook:MIPS/Portage/Branches/ko")[추가 도구](/wiki/Handbook:MIPS/Portage/Tools/ko "Handbook:MIPS/Portage/Tools/ko")[꾸러미 저장소 개별 설정](/wiki/Handbook:MIPS/Portage/CustomTree/ko "Handbook:MIPS/Portage/CustomTree/ko")[고급 기능](/wiki/Handbook:MIPS/Portage/Advanced/ko "Handbook:MIPS/Portage/Advanced/ko")[네트워크 설정](/wiki/Handbook:MIPS/Full/Networking/ko "Handbook:MIPS/Full/Networking/ko")[시작하기](/wiki/Handbook:MIPS/Networking/Introduction/ko "Handbook:MIPS/Networking/Introduction/ko")[고급 설정](/wiki/Handbook:MIPS/Networking/Advanced/ko "Handbook:MIPS/Networking/Advanced/ko")[모듈러 네트워크](/wiki/Handbook:MIPS/Networking/Modular/ko "Handbook:MIPS/Networking/Modular/ko")[무선 네트워크](/wiki/Handbook:MIPS/Networking/Wireless/ko "Handbook:MIPS/Networking/Wireless/ko")[기능 추가](/wiki/Handbook:MIPS/Networking/Extending/ko "Handbook:MIPS/Networking/Extending/ko")[동적 관리](/wiki/Handbook:MIPS/Networking/Dynamic/ko "Handbook:MIPS/Networking/Dynamic/ko")
+
+## Contents
+
+- [1선택: 펌웨어 설치](#.EC.84.A0.ED.83.9D:_.ED.8E.8C.EC.9B.A8.EC.96.B4_.EC.84.A4.EC.B9.98)
+- [2Firmware](#Firmware)
+  - [2.1Suggested: Linux Firmware](#Suggested:_Linux_Firmware)
+    - [2.1.1Firmware Loading](#Firmware_Loading)
+- [3sys-kernel/installkernel](#sys-kernel.2Finstallkernel)
+  - [3.1Bootloader](#Bootloader)
+    - [3.1.1GRUB](#GRUB)
+    - [3.1.2Traditional layout, other bootloaders (e.g. (e)lilo, syslinux, etc.)](#Traditional_layout.2C_other_bootloaders_.28e.g._.28e.29lilo.2C_syslinux.2C_etc..29)
+  - [3.2Initramfs](#Initramfs)
+    - [3.2.1Chroot detection](#Chroot_detection)
+- [4Kernel selection](#Kernel_selection)
+- [5기본: 직접 설정](#.EA.B8.B0.EB.B3.B8:_.EC.A7.81.EC.A0.91_.EC.84.A4.EC.A0.95)
+- [6소스 코드 설치](#.EC.86.8C.EC.8A.A4_.EC.BD.94.EB.93.9C_.EC.84.A4.EC.B9.98)
+  - [6.1Option 2 - Assisted manual process](#Option_2_-_Assisted_manual_process)
+  - [6.2Option 3 - Configuring by hand](#Option_3_-_Configuring_by_hand)
+  - [6.3Optional: Signed kernel modules](#Optional:_Signed_kernel_modules)
+  - [6.4설정 준비](#.EC.84.A4.EC.A0.95_.EC.A4.80.EB.B9.84)
+  - [6.5개별 설정](#.EA.B0.9C.EB.B3.84_.EC.84.A4.EC.A0.95)
+  - [6.6컴파일 및 설치](#.EC.BB.B4.ED.8C.8C.EC.9D.BC_.EB.B0.8F_.EC.84.A4.EC.B9.98)
+
+### 선택: 펌웨어 설치
+
+### Firmware
+
+#### Suggested: Linux Firmware
+
+On many systems, non-FOSS firmware is required for certain hardware to function. The [sys-kernel/linux-firmware](https://packages.gentoo.org/packages/sys-kernel/linux-firmware) package contains firmware for many, but not all, devices.
+
+**요령**
+
+Most wireless cards and GPUs require firmware to function.
+
+`root #` `emerge --ask sys-kernel/linux-firmware`
+
+**참고**
+
+Installing certain firmware packages often requires accepting the associated firmware licenses. If necessary, visit the [license handling section](/wiki/Handbook:MIPS/Working/Portage/ko#Licenses "Handbook:MIPS/Working/Portage/ko") of the Handbook for help on accepting licenses.
+
+##### Firmware Loading
+
+Firmware files are typically loaded when the associated kernel module is loaded. This means the firmware must be built into the kernel using **CONFIG\_EXTRA\_FIRMWARE** if the kernel module is set to _Y_ instead of _M_. In most cases, building-in a module which required firmware can complicate or break loading.
+
+## sys-kernel/installkernel
+
+[Installkernel](/wiki/Installkernel "Installkernel") may be used to automate the kernel installation, [initramfs](/wiki/Initramfs "Initramfs") generation, [unified kernel image](/wiki/Unified_kernel_image "Unified kernel image") generation and bootloader configuration, among other things. [sys-kernel/installkernel](https://packages.gentoo.org/packages/sys-kernel/installkernel) implements two paths of achieving this: the traditional installkernel originating from Debian and [systemd](/wiki/Systemd/ko "Systemd/ko")'s kernel-install. Which one to choose depends, among other things, on the system's bootloader. By default, systemd's kernel-install is used on systemd profiles, while the traditional installkernel is the default for other profiles.
+
+### Bootloader
+
+Now is the time to think about which bootloader the user wants for the system.
+
+**중요**
+
+Only one selection is required in the following subsection, if unsure of which to use then go with the first listed for now. It's always possible to switch at a later date if required.
+
+#### GRUB
+
+Users of GRUB can use either systemd's kernel-install or the traditional Debian installkernel. The [systemd](https://packages.gentoo.org/useflags/systemd) [USE flag/ko (page does not exist)](/index.php?title=USE_flag/ko&action=edit&redlink=1 "USE flag/ko (page does not exist)") USE flag switches between these implementations. To automatically run grub-mkconfig when installing the kernel, enable the [grub](https://packages.gentoo.org/useflags/grub) [USE flag/ko (page does not exist)](/index.php?title=USE_flag/ko&action=edit&redlink=1 "USE flag/ko (page does not exist)") [USE flag](/wiki/USE_flag "USE flag").
+
+**참고**
+
+GRUB requires kernels to be installed to /boot.
+
+파일 **`/etc/portage/package.use/installkernel`**
+
+```
+sys-kernel/installkernel grub
+
+```
+
+`root #` `emerge --ask sys-kernel/installkernel`
+
+**참고**
+
+systemd-boot requires kernels to be installed to /efi.
+
+**참고**
+
+When [app-emulation/virt-firmware](https://packages.gentoo.org/packages/app-emulation/virt-firmware) is used to configure the UEFI ensure that the kernel-bootcfg-boot-successful service is enabled before attempting to install the kernel. This implementation of EFIstub booting is the default for systemd systems.
+
+`root #` `systemctl enable kernel-bootcfg-boot-successful.service`
+
+**참고**
+
+EFIstub requires kernels to be installed to /efi.
+
+#### Traditional layout, other bootloaders (e.g. (e)lilo, syslinux, etc.)
+
+The traditional /boot layout (for e.g. (e)LILO, syslinux, etc.) is used by default if the [grub](https://packages.gentoo.org/useflags/grub) [USE flag/ko (page does not exist)](/index.php?title=USE_flag/ko&action=edit&redlink=1 "USE flag/ko (page does not exist)"), [systemd-boot](https://packages.gentoo.org/useflags/systemd-boot) [USE flag/ko (page does not exist)](/index.php?title=USE_flag/ko&action=edit&redlink=1 "USE flag/ko (page does not exist)"), [efistub](https://packages.gentoo.org/useflags/efistub) [USE flag/ko (page does not exist)](/index.php?title=USE_flag/ko&action=edit&redlink=1 "USE flag/ko (page does not exist)") and [uki](https://packages.gentoo.org/useflags/uki) [USE flag/ko (page does not exist)](/index.php?title=USE_flag/ko&action=edit&redlink=1 "USE flag/ko (page does not exist)") USE flags are **not** enabled. No further action is required.
+
+### Initramfs
+
+An **init** ial **ram**-based **f** ile **s** ystem, or [initramfs](/wiki/Initramfs "Initramfs"), may be required for a system to boot. A wide of variety of cases may necessitate one, but common cases include:
+
+- Kernels where storage/filesystem drivers are modules.
+- Layouts with /usr/ or /var/ on separate partitions.
+- Encrypted root filesystems.
+
+**요령**
+
+[Distribution kernels](/wiki/Project:Distribution_Kernel "Project:Distribution Kernel") are designed to be used with an initramfs, as many storage and filesystem drivers are built as modules.
+
+In addition to mounting the root filesystem, an initramfs may also perform other tasks such as:
+
+- Running **f** ile **s** ystem **c** onsistency chec **k** fsck, a tool to check and repair consistency of a file system in such events of uncleanly shutdown a system.
+- Providing a recovery environment in the event of late-boot failures.
+
+[Installkernel](/wiki/Installkernel "Installkernel") can automatically generate an initramfs when installing the kernel if the [dracut](https://packages.gentoo.org/useflags/dracut) [USE flag/ko (page does not exist)](/index.php?title=USE_flag/ko&action=edit&redlink=1 "USE flag/ko (page does not exist)") or [ugrd](https://packages.gentoo.org/useflags/ugrd) [USE flag/ko (page does not exist)](/index.php?title=USE_flag/ko&action=edit&redlink=1 "USE flag/ko (page does not exist)") USE flag is enabled:
+
+파일 **`/etc/portage/package.use/installkernel`**
+
+```
+sys-kernel/installkernel dracut
+
+```
+
+#### Chroot detection
+
+Bootloaders such as [systemd-boot](/wiki/Systemd/systemd-boot "Systemd/systemd-boot") and [EFI stub](/wiki/EFI_stub "EFI stub") use the kernel arguments of the running system as set in /proc/cmdline by default. Because of the wide range of ways Gentoo can be installed users will randomly get tripped up by this.
+
+To help solve any issues this may cause, [sys-kernel/installkernel](https://packages.gentoo.org/packages/sys-kernel/installkernel) will check if it is running in a chroot and fail if the kernel command line is not explicitly configured. Otherwise the bootloader would use the install media's boot arguments which would lead to boot failure.
+
+One way to satisfy [sys-kernel/installkernel](https://packages.gentoo.org/packages/sys-kernel/installkernel) is by using Dracut's config file to set the root partition UUID as shown below, or alternatively for more information on what this check helps with and different ways to configure it, see [Installkernel#Install\_chroot\_check](/wiki/Installkernel#Install_chroot_check.2Fko "Installkernel").
+
+`root #` `mkdir /etc/dracut.conf.d`
+
+`root #` `blkid`
+
+```
+/dev/sda3: UUID="2122cd72-94d7-4dcc-821e-3705926deecc"
+```
+
+In the above example, the root partition is /dev/sda3 and the UUID is 2122cd72-94d7-4dcc-821e-3705926deecc.
+The dracut config file would then look like:
+
+파일 **`/etc/dracut.conf.d/00-installkernel.conf`**
+
+```
+kernel_cmdline=" root=UUID=2122cd72-94d7-4dcc-821e-3705926deecc " # Note leading and trailing spaces
+
+```
+
+`root #` `emerge --ask sys-kernel/installkernel`
+
+## Kernel selection
+
+It can be a wise move to use the dist-kernel on the first boot as it provides a very simple method to rule out system issues and kernel config issues. Always having a known working kernel to fallback on can speed up debugging and alleviate anxiety when updating that your system will no longer boot.
+
+A common misconception is that a manually compiled kernel will use a lot less RAM than a pre configured distribution kernel. Due to the modular nature of the Linux kernel, only what is needed by the system is loaded and in most cases resulting in similar memory usage.
+
+**중요**
+
+Only one selection is required in the following subsection, if unsure of which to use then go with the first listed for now. It's always possible to switch at a later date if required.
+
+Ranked from least involved to most involved:
+
+1. 직접 설정하고 빌드하는 방법, 또는
+2. genkernel 도구를 사용하여 자동으로 리눅스 커널을 빌드하고 설치하는 방법
+
+주변에 빌드한 모든 배포판의 핵심은 리눅스 커널입니다. 이는 사용자 프로그램과 여러분의 시스템 하드웨어 사이에 있는 계층입니다. 젠투는 사용자에게 최대한 다양한 커널 소스코드를 제공합니다. 설명을 포함한 전체 목록은 [커널 개요 페이지](/index.php?title=Kernel/Overview/ko&action=edit&redlink=1 "Kernel/Overview/ko (page does not exist)") 에 있습니다.
+
+**요령**
+
+Kernel installation tasks such as copying the kernel image to /boot or the [EFI System Partition](/wiki/EFI_System_Partition "EFI System Partition"), generating an [initramfs](/wiki/Initramfs "Initramfs") and/or [Unified Kernel Image](/wiki/Unified_Kernel_Image "Unified Kernel Image"), updating bootloader configuration, can be automated with [installkernel](/wiki/Installkernel "Installkernel"). Users may wish to configure and install [sys-kernel/installkernel](https://packages.gentoo.org/packages/sys-kernel/installkernel) before proceeding. See the [Kernel installation section below](/wiki/Handbook:MIPS/Installation/Kernel#Kernel_installation.2Fko "Handbook:MIPS/Installation/Kernel") for more more information.
+
+## 기본: 직접 설정
+
+## 소스 코드 설치
+
+When manually compiling the kernel for mips-based systems, Gentoo recommends the [sys-kernel/mips-sources](https://packages.gentoo.org/packages/sys-kernel/mips-sources) package.
+
+Choose an appropriate kernel source and install it using emerge:
+
+`root #` `emerge --ask sys-kernel/mips-sources`
+
+/usr/src를 들여다보면 설치한 커널 소스를 가리키는 linux 심볼릭 링크를 볼 수 있습니다:
+
+It is conventional for a /usr/src/linux symlink to be maintained, such that it refers to whichever sources correspond with the currently running kernel. However, this symbolic link will not be created by default. An easy way to create the symbolic link is to utilize eselect's kernel module.
+
+For further information regarding the purpose of the symlink, and how to manage it, please refer to [Kernel/Upgrade](/wiki/Kernel/Upgrade/ko "Kernel/Upgrade/ko").
+
+First, list all installed kernels:
+
+`root #` `eselect kernel list`
+
+```
+Available kernel symlink targets:
+  [1]   linux-6.19.1-gentoo
+
+```
+
+In order to create a symbolic link called linux, use:
+
+`root #` `eselect kernel set 1`
+
+`root #` `ls -l /usr/src/linux`
+
+```
+lrwxrwxrwx    1 root   root    12 Oct 13 11:04 /usr/src/linux -> linux-6.19.1-gentoo
+
+```
+
+Manually configuring a kernel is commonly seen as one of the most difficult procedures a system administrator has to perform. Nothing is less true - after configuring a few kernels no one remembers that it was difficult! There are two ways for a Gentoo user to manage a manual kernel system, both of which are listed below:
+
+**중요**
+
+Only one selection is required in the following subsection, if unsure of which to use then go with the first listed for now. It's always possible to switch at a later date if required.
+
+##### Option 2 - Assisted manual process
+
+This method allows a user to have full control of how their kernel is built with as minimal help from outside tools as they wish. Some could consider this as making it hard for the sake of it.
+
+그러나 맞는 이야기이기도 합니다. 커널을 직접 설정했을 때 시스템을 알아둘 필요가 있습니다. 대부분의 정보는 lspci 명령이 들어있는 [sys-apps/pciutils](https://packages.gentoo.org/packages/sys-apps/pciutils)를 이머지하여 수집할 수 있습니다:
+
+`root #` `emerge --ask sys-apps/pciutils`
+
+**참고**
+
+chroot를 하고 나면, lspci가 출력하는 ( _pcilib: cannot open /sys/bus/pci/devices_ 와 같은) pcilib 경고를 무시하는게 안전합니다.
+
+시스템 정보를 알아볼 수 있는 또 다른 부분은 설치 CD에서 사용하는 커널 모듈이 무엇인지 보여주는 lsmod를 실행했을 때 나타나는 활성화 할 모듈에 대한 바람직한 실마리입니다.
+
+이제 커널 소스 디렉터리로 이동하여 make menuconfig를 실행하십시오. 메뉴 기반 설정 화면을 실행합니다.
+
+`root #` `cd /usr/src/linux
+`
+
+`root #` `make menuconfig`
+
+**요령**
+
+To view the full list of make arguments available for the kernel, run `make help`.
+
+The kernel has a method of autodetecting the modules currently being used on the installcd which will give a great starting point to allow a user to configure their own. This can be called by using:
+
+`root #` `make localmodconfig`
+
+Manually configuring should not be needed at this point, but if a user wish to check:
+
+`root #` `make nconfig`
+
+Now it's time to decide if modules signing is required in the steps listed in [here](/wiki/Handbook:MIPS/Installation/Kernel#Optional:_Signed_kernel_modules_2.2Fko "Handbook:MIPS/Installation/Kernel")
+
+If not, proceed to building described [here](/wiki/Handbook:MIPS/Installation/Kernel#Compiling_and_installing.2Fko "Handbook:MIPS/Installation/Kernel")
+
+##### Option 3 - Configuring by hand
+
+The Linux kernel configuration has many, many sections and as configuring a kernel by hand is rarely needed thanks to the two tools listed above. The steps to do it by hand are now included at [Kernel/Gentoo\_Kernel\_Configuration\_Guide](/wiki/Kernel/Gentoo_Kernel_Configuration_Guide/ko "Kernel/Gentoo Kernel Configuration Guide/ko")
+
+#### Optional: Signed kernel modules
+
+To automatically sign the kernel modules enable CONFIG\_MODULE\_SIG\_ALL:
+
+커널 **Sign kernel modules CONFIG\_MODULE\_SIG\_ALL**
+
+```
+[*] Enable loadable module support
+  -*-   Module signature verification
+    [*]     Automatically sign all modules
+    Which hash algorithm should modules be signed with? (Sign modules with SHA-512) --->
+
+```
+
+Optionally change the hash algorithm if desired.
+
+To enforce that all modules are signed with a valid signature, enable CONFIG\_MODULE\_SIG\_FORCE as well:
+
+커널 **Enforce signed kernel modules CONFIG\_MODULE\_SIG\_FORCE**
+
+```
+[*] Enable loadable module support
+  -*-   Module signature verification
+    [*]     Require modules to be validly signed
+    [*]     Automatically sign all modules
+    Which hash algorithm should modules be signed with? (Sign modules with SHA-512) --->
+
+```
+
+To use a custom key, specify the location of this key in CONFIG\_MODULE\_SIG\_KEY. If unspecified, the kernel build system will generate a key. It is recommended to generate one manually instead. This can be done with:
+
+`root #` `openssl req -new -nodes -utf8 -sha256 -x509 -outform PEM -out kernel_key.pem -keyout kernel_key.pem`
+
+OpenSSL will ask some questions about the user generating the key, it is recommended to fill in these questions as detailed as possible.
+
+Store the key in a safe location, at the very least the key should be readable only by the root user. Verify this with:
+
+`root #` `ls -l kernel_key.pem`
+
+```
+ -r-------- 1 root root 3164 Jan  4 10:38 kernel_key.pem
+```
+
+If this outputs anything other then the above, correct the permissions with:
+
+`root #` `chown root:root kernel_key.pem
+`
+
+`root #` `chmod 400 kernel_key.pem
+`
+
+커널 **Specify signing key CONFIG\_MODULE\_SIG\_KEY**
+
+```
+-*- Cryptographic API  --->
+  Certificates for signature checking  --->
+    (/path/to/kernel_key.pem) File name or PKCS#11 URI of module signing key
+
+```
+
+To also sign external kernel modules installed by other packages via `linux-mod-r1.eclass`, enable the [modules-sign](https://packages.gentoo.org/useflags/modules-sign) [USE flag/ko (page does not exist)](/index.php?title=USE_flag/ko&action=edit&redlink=1 "USE flag/ko (page does not exist)") USE flag globally:
+
+파일 **`/etc/portage/make.conf`** **Enable module signing**
+
+```
+USE="modules-sign"
+</div>
+
+<div lang="en" dir="ltr" class="mw-content-ltr">
+# Optionally, when using custom signing keys.
+MODULES_SIGN_KEY="/path/to/kernel_key.pem"
+MODULES_SIGN_CERT="/path/to/kernel_key.pem" # Only required if the MODULES_SIGN_KEY does not also contain the certificate
+MODULES_SIGN_HASH="sha512" # Defaults to sha512
+
+```
+
+**참고**
+
+MODULES\_SIGN\_KEY and MODULES\_SIGN\_CERT may point to different files. For this example, the pem file generated by OpenSSL includes both the key and the accompanying certificate, and thus both variables are set to the same value.
+
+### 설정 준비
+
+**중요**
+
+Origin 200/2000, Indigo2 Impact (R10000), Octane/Octane2, O2 에서 시스템을 부팅하려면 64비트 커널이 필요합니다. 이 머신에서 64비트 커널을 빌드할 크로스컴파일러를 만들려면 [sys-devel/kgcc64](https://packages.gentoo.org/packages/sys-devel/kgcc64)를 이머지하십시오.
+
+대부분의 시스템에서는 커널 소스에 .configs 예제를 지원합니다. 모든 시스템에서 이런 방식으로 설정을 지원하진 않습니다. 이 설정은 아래 표에 언급한 명령으로 처리할 수 있습니다.
+
+시스템
+설정 명령
+Cobalt Servers
+make cobalt\_defconfigIndy, Indigo2 (R4k), Challenge S
+make ip22\_defconfigOrigin 200/2000
+make ip27\_defconfigIndigo2 Impact (R10k)
+make ip28\_defconfigO2
+make ip32\_defconfig
+
+모든 젠투 설치 이미지에서는 이미지 자체의 일부로 /proc/config.gz와 같이 접근할 수 있는 커널 설정 옵션을 제공합니다. 이 파일은 대부분의 경우 사용합니다. 커널 소스 코드가 현재 동작중인 커널과 거의 비슷하다면 최선의 선택일 수 있습니다. 이 파일을 추출하려면, 간단하게 아래와 같이 zcat 명령을 실행하십시오.
+
+`root #` `zcat /proc/config.gz > .config`
+
+**중요**
+
+이 커널 설정은 netboot 이미지로 설정한 상태입니다. initramfs의 디렉터리 또는 initrd의 루프백 장치가 있는 곳에서 루트 파일시스템 이미지를 찾을 수 있습니다. make menuconfig를 실행할 때 General Setup으로 이동 후 initramfs 옵션 비활성화를 꼭 처리해주십시오.
+
+### 개별 설정
+
+설정을 찾았다면 커널 소스 디렉터리로 다운로드 후 .config로 이름을 바꾸십시오. 그 다음 위에서 언급한 대로 업데이트할 내용을 모두 가져오기 위해 make oldconfig를 실행하시고 컴파일하기 전에 설정을 개별적으로 바꾸십시오.
+
+`root #` `cd /usr/src/linux
+`
+
+`root #` `cp /path/to/example-config .config
+`
+
+`root #` `make oldconfig`
+
+현재의 기본값으로 처리하려면, 그냥 각 프롬프트에서 `Enter`(또는 `Return`)를 누르십시오...
+
+`root #` `make menuconfig`
+
+**중요**
+
+Kernel Hacking 섹션에서 "Are You Using A Cross Compiler?"라는 옵션이 있습니다. 이 옵션은 커널을 컴파일 할 때 gcc에게 커널 Makefile을 "mips-linux-"(또는 mipsel-linux ... 등)과 명령으로 간주하라고 알려줍니다. 크로스 컴파일을 진행한다면 특히 이 옵션을 꺼야합니다. 크로스 컴파일러를 호출해야 한다면, 다음 절에서 보여드리는 바와 같이 CROSS\_COMPILE 변수를 사용하여 접두사를 정의하십시오.
+
+**중요**
+
+Octane systems 중 ALSA가 동작하지 않는 곳에서 JFS와 ALSA를 같이 넣었을때 발생하는 문제가 있습니다. MIPS용 JFS 실험 환경을 시험삼아 활용하려 한다면, 이와 같은 경우에는 JFS 사용을 피하시는게 좋습니다.
+
+### 컴파일 및 설치
+
+이제 커널을 설정했고 컴파일 하고 설치할 차례입니다. 설정을 빠져나간 후 컴파일 과정을 시작하십시오:
+
+**참고**
+
+64비트 머신에서 64비트 컴파일러를 사용하려면 CROSS\_COMPILE=mips64-unknown-linux-gnu-(리틀 엔디언 시스템에서는 mips64el-...)를 지정하십시오.
+
+자체적으로 컴파일하려면:
+
+`root #` `make vmlinux modules modules_install`
+
+대상 머신에 컴파일 하려면 mips64-unknown-linux-gnu- 를 적절하게 적어넣으십시오:
+
+`root #` `make vmlinux modules modules_install CROSS_COMPILE=mips64-unknown-linux-gnu-`
+
+x86같은 다른 머신에서 컴파일할 때는 커널을 컴파일하고 특정 디렉터리로 모듈을 설치하여 대상 머신에 보낼 때 다음 명령을 사용하십시오.
+
+`root #` `make vmlinux modules CROSS_COMPILE=mips64-unknown-linux-gnu-
+`
+
+`root #` `make modules_install INSTALL_MOD_PATH=/somewhere`
+
+**중요**
+
+Indy, Indigo2 (R4k), Challenge S, O2에서 64비트 커널을 컴파일하면 vmlinux 대신 vmlinux.32 타겟을 사용하십시오. 그렇지 않으면 머신을 부팅할 수 없습니다. ELF64 형식을 해석할 수 없는 PROM에서 처리할 일입니다.
+
+`root #` `make vmlinux.32`
+
+**참고**
+
+`make -jX` 명령을 사용하고 X에 실행 가능토록 허용할 빌드 프로세스 갯수를 넣어 병렬 빌드를 활성화 할 수 있습니다. 이는 앞서 언급한 /etc/portage/make.conf의 MAKEOPTS 변수와 비슷합니다.
+
+위 과정을 통해 최종 커널 vmlinux.32를 만듭니다.
+
+커널 컴파일이 끝나면 /boot에 커널 이미지를 복사하십시오:
+
+**참고**
+
+Cobalt servers에서 부트로더는 압축 커널 이미지 형태로 나타납니다. gzip -9 할 파일은 /boot/에 있음을 기억해두십시오.
+
+`root #` `cp vmlinux /boot/kernel-6.19.1-gentoo`
+
+Cobalt servers 에서는 커널 이미지를 압축하십시오:
+
+`root #` `gzip -9v /boot/kernel-6.19.1-gentoo`
+
+[시스템 설정](/wiki/Handbook:MIPS/Installation/System/ko "Handbook:MIPS/Installation/System/ko") 으로 설치 과정을 계속 진행하십시오.
+
+[← 젠투 베이스 시스템 설치](/wiki/Handbook:MIPS/Installation/Base/ko "이전 내용") [처음](/wiki/Handbook:MIPS/ko "Handbook:MIPS/ko") [시스템 설정 →](/wiki/Handbook:MIPS/Installation/System/ko "다음 내용")

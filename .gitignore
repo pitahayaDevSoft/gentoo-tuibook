@@ -1,0 +1,38 @@
+# Jules Dev Standard Gitignore - Hardened
+
+# Logs and temporals
+*.log
+*.tmp
+*.bak
+*.out
+*~
+
+# Environment and Secrets
+.env
+.env.*
+*.local
+.manifests/
+
+# Build artifacts
+target/
+dist/
+build/
+bin/
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+.next/
+.serverless/
+*.exe
+
+# IDE and System
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.DS_Store
+Thumbs.db
+desktop.ini
