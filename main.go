@@ -76,6 +76,10 @@ var (
 
 	glamourStyle []byte
 
+	showWelcome     = true
+	customStylePath = ""
+	wrapWidth       = 0
+
 	surfaceBg    = lipgloss.Color("#060608")
 	surface3     = lipgloss.Color("#1c2130")
 	brandPrimary = lipgloss.Color("#ff007f")
@@ -108,17 +112,23 @@ type ThemeColors struct {
 }
 
 type Config struct {
-	DefaultArch string        `json:"default_arch"`
-	DefaultLang string        `json:"default_lang"`
-	Sidebar     SidebarConfig `json:"sidebar"`
-	Theme       ThemeColors   `json:"theme"`
+	DefaultArch     string        `json:"default_arch"`
+	DefaultLang     string        `json:"default_lang"`
+	ShowWelcome     bool          `json:"show_welcome"`
+	CustomStylePath string        `json:"custom_style_path"`
+	WrapWidth       int           `json:"wrap_width"`
+	Sidebar         SidebarConfig `json:"sidebar"`
+	Theme           ThemeColors   `json:"theme"`
 }
 
 func defaultConfig() Config {
 	return Config{
-		DefaultArch: "auto",
-		DefaultLang: "auto",
-		Sidebar:     SidebarConfig{WidthPercent: 25, Min: 20, Max: 40},
+		DefaultArch:     "auto",
+		DefaultLang:     "auto",
+		ShowWelcome:     true,
+		CustomStylePath: "",
+		WrapWidth:       0,
+		Sidebar:         SidebarConfig{WidthPercent: 25, Min: 20, Max: 40},
 		Theme: ThemeColors{
 			BrandPrimary: "#ff007f",
 			SurfaceBg:    "#060608",
@@ -194,6 +204,10 @@ func applyConfig(cfg Config) {
 		sidebarCfg.Max = cfg.Sidebar.Max
 	}
 
+	showWelcome = cfg.ShowWelcome
+	customStylePath = cfg.CustomStylePath
+	wrapWidth = cfg.WrapWidth
+
 	textColor := lipgloss.Color("#EBEBEB")
 	if cfg.Theme.BrandPrimary != "" {
 		brandPrimary = lipgloss.Color(cfg.Theme.BrandPrimary)
@@ -221,7 +235,18 @@ func applyConfig(cfg Config) {
 	if primaryHex == "" {
 		primaryHex = "#ff007f"
 	}
-	glamourStyle = []byte(strings.ReplaceAll(glamourStyleTemplate, "{{brandPrimary}}", primaryHex))
+
+	if customStylePath != "" {
+		customStyle, err := os.ReadFile(customStylePath)
+		if err == nil {
+			glamourStyle = customStyle
+		} else {
+			log.Printf("custom style load error %s: %v", customStylePath, err)
+			glamourStyle = []byte(strings.ReplaceAll(glamourStyleTemplate, "{{brandPrimary}}", primaryHex))
+		}
+	} else {
+		glamourStyle = []byte(strings.ReplaceAll(glamourStyleTemplate, "{{brandPrimary}}", primaryHex))
+	}
 }
 
 type mode int
@@ -616,7 +641,11 @@ func initialModel() model {
 	d.Styles.SelectedTitle = selectedStyle
 	d.Styles.NormalTitle = lipgloss.NewStyle().PaddingLeft(2)
 
-	m := model{archs: archs, mode: modeWelcome, lang: "en"}
+	startMode := modeWelcome
+	if !showWelcome {
+		startMode = modeList
+	}
+	m := model{archs: archs, mode: startMode, lang: "en"}
 	m.langs = m.listAvailableLangs()
 
 	if cfg.DefaultArch != "auto" {
@@ -652,6 +681,9 @@ func initialModel() model {
 
 func (m *model) renderChapter() {
 	ww := m.viewport.Width
+	if wrapWidth > 0 && wrapWidth < ww {
+		ww = wrapWidth
+	}
 	if ww < 20 {
 		ww = 80
 	}

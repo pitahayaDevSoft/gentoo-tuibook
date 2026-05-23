@@ -191,6 +191,62 @@ Our navigation system utilizes visual directional mappings and Vim-inspired shor
 
 ---
 
+## Runtime Configuration Guide
+
+`gentoo-tuibook` is highly customizable via a standard JSON configuration file. Returning users and advanced Linux enthusiasts can tweak the colors, layout, default settings, and reading preferences to build their perfect terminal setup.
+
+### File Location
+
+The configuration file is loaded dynamically from the following paths depending on your operating system:
+- **UNIX / Linux**: `$XDG_CONFIG_HOME/gentoo-tuibook/config.json` (defaults to `~/.config/gentoo-tuibook/config.json`)
+- **Windows**: `%APPDATA%\gentoo-tuibook\config.json` (typically `C:\Users\<Username>\AppData\Roaming\gentoo-tuibook\config.json`)
+
+If the file does not exist, the TUI automatically generates a default config file with sensible, premium settings on its first launch.
+
+### Parameters Semantic Breakdown
+
+| Field | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `default_arch` | `string` | `"auto"` | The default hardware architecture manual to display on start (e.g., `"amd64"`, `"arm64"`, `"x86"`, `"ppc"`, `"auto"`). `"auto"` falls back to `"amd64"`. |
+| `default_lang` | `string` | `"auto"` | Default ISO 639-1 language code for handbook translation files (e.g., `"en"`, `"es"`, `"de"`, `"fr"`, `"auto"`). `"auto"` automatically queries environment locale variables. |
+| `show_welcome` | `boolean` | `true` | When set to `true`, displays the stylized Welcome Screen on launch. Set to `false` to skip it and boot straight into the chapter list view. |
+| `wrap_width` | `integer` | `0` | Capping width for word wrap formatting (in columns). Set to `0` to wrap dynamically to the split viewport width, or specify a fixed width (like `80` or `100`) for premium reading on ultra-wide terminal emulators. |
+| `custom_style_path` | `string` | `""` | Absolute filepath pointing to a custom Glamour JSON stylesheet. Allows loading customized Markdown themes. If left empty `""` or invalid, falls back to the dynamic Gentoo Pink stylesheet. |
+| `sidebar.width_percent` | `integer` | `25` | Percentage of terminal width assigned to the chapter list sidebar (e.g. `25` for a quarter of the width). |
+| `sidebar.min` | `integer` | `20` | Minimum column width allowed for the sidebar to prevent visual squeezing of chapter names. |
+| `sidebar.max` | `integer` | `40` | Maximum column width allowed for the sidebar to preserve screen real estate. |
+| `theme.brand_primary` | `string` | `"#ff007f"` | The primary highlight and accent color of the TUI (Vim badges, borders, markdown headers, URLs, selected items, etc.). Supports hex codes. |
+| `theme.surface_bg` | `string` | `"#060608"` | The main background color of the application. |
+| `theme.surface_3` | `string` | `"#1c2130"` | The secondary color for borders, boxes, and unselected text headers. |
+| `theme.text` | `string` | `"#EBEBEB"` | The default text foreground color. |
+
+### Complete JSON Template Example
+
+You can copy and paste the following snippet directly into your local configuration file to start editing:
+
+```json
+{
+  "default_arch": "auto",
+  "default_lang": "auto",
+  "show_welcome": true,
+  "wrap_width": 80,
+  "custom_style_path": "",
+  "sidebar": {
+    "width_percent": 25,
+    "min": 20,
+    "max": 40
+  },
+  "theme": {
+    "brand_primary": "#ff007f",
+    "surface_bg": "#060608",
+    "surface_3": "#1c2130",
+    "text": "#EBEBEB"
+  }
+}
+```
+
+---
+
 ## Advanced Gentoo Linux Specifications
 
 `gentoo-tuibook` is engineered specifically with **Gentoo Linux**'s strict minimalist, compiler-first philosophy in mind. Here are the advanced details of the TUI architecture and packaging internals:
