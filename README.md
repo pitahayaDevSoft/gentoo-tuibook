@@ -197,9 +197,8 @@ Our navigation system utilizes visual directional mappings and Vim-inspired shor
 
 ### File Location
 
-The configuration file is loaded dynamically from the following paths depending on your operating system:
+The configuration file is loaded dynamically from:
 - **UNIX / Linux**: `$XDG_CONFIG_HOME/gentoo-tuibook/config.json` (defaults to `~/.config/gentoo-tuibook/config.json`)
-- **Windows**: `%APPDATA%\gentoo-tuibook\config.json` (typically `C:\Users\<Username>\AppData\Roaming\gentoo-tuibook\config.json`)
 
 If the file does not exist, the TUI automatically generates a default config file with sensible, premium settings on its first launch.
 
