@@ -24,25 +24,38 @@ import (
 var handbookFS embed.FS
 
 var (
+	Version = "0.1.0"
+)
+
+const (
+	handbookRoot     = "data/handbook"
+	defaultFetchDate = "2026-05-23"
+)
+
+func getHandbookPath(parts ...string) string {
+	return strings.Join(append([]string{handbookRoot}, parts...), "/")
+}
+
+var (
 	editLinkRe     = regexp.MustCompile(`\\\[[ \t]*\[[ \t]*[Ee]dit[ \t]*\][ \t]*\([^)]*\)[ \t]*\\\]`)
 	langLinkRe     = regexp.MustCompile(`(?m)^Other languages:\n\n(?:- .*\n)+\n`)
 	markdownLinkRe = regexp.MustCompile(`\[([^\]]+)\]\(([^\s\)]+)(?:\s+"[^"]*")?\)`)
 	rawURLRe       = regexp.MustCompile(`https?://[^\s\)"]+`)
 
-	glamourStyle = []byte(`{
+	glamourStyleTemplate = `{
 		"document": { "block_prefix": "\n", "block_suffix": "\n", "color": "#EBEBEB", "margin": 1 },
-		"heading": { "block_suffix": "\n", "color": "#22d3ee", "bold": true },
-		"h1": { "prefix": " # ", "suffix": " ", "color": "#22d3ee", "background_color": "#1c2130", "bold": true },
-		"h2": { "prefix": " ## ", "color": "#22d3ee", "bold": true },
-		"h3": { "prefix": " ### ", "color": "#22d3ee" },
+		"heading": { "block_suffix": "\n", "color": "{{brandPrimary}}", "bold": true },
+		"h1": { "prefix": " # ", "suffix": " ", "color": "{{brandPrimary}}", "background_color": "#1c2130", "bold": true },
+		"h2": { "prefix": " ## ", "color": "{{brandPrimary}}", "bold": true },
+		"h3": { "prefix": " ### ", "color": "{{brandPrimary}}" },
 		"strong": { "bold": true, "color": "#FFFFFF" },
 		"emph": { "italic": true, "color": "#94A3B8" },
-		"link": { "color": "#22d3ee", "underline": true },
-		"link_text": { "color": "#22d3ee", "bold": true },
+		"link": { "color": "{{brandPrimary}}", "underline": true },
+		"link_text": { "color": "{{brandPrimary}}", "bold": true },
 		"code": { "prefix": " ", "suffix": " ", "color": "#F0C674", "background_color": "#1C2130" },
 		"code_block": { "margin": 1, "chroma": {
 			"text": { "color": "#C4C4C4" },
-			"keyword": { "color": "#22D3EE" },
+			"keyword": { "color": "{{brandPrimary}}" },
 			"name_function": { "color": "#7FDBCA" },
 			"literal_string": { "color": "#F0C674" },
 			"comment": { "color": "#6272A4" },
@@ -56,14 +69,16 @@ var (
 		}},
 		"item": { "block_prefix": "- ", "color": "#EBEBEB" },
 		"enumeration": { "block_prefix": ". " },
-		"hr": { "color": "#22D3EE" },
+		"hr": { "color": "{{brandPrimary}}" },
 		"block_quote": { "color": "#6272A4", "indent": 1, "indent_token": "| " },
 		"table": { "center_separator": "+", "column_separator": "|", "row_separator": "-" }
-	}`)
+	}`
+
+	glamourStyle []byte
 
 	surfaceBg    = lipgloss.Color("#060608")
 	surface3     = lipgloss.Color("#1c2130")
-	brandPrimary = lipgloss.Color("#22d3ee")
+	brandPrimary = lipgloss.Color("#ff007f")
 
 	baseStyle     = lipgloss.NewStyle().Background(surfaceBg).Foreground(lipgloss.Color("#EBEBEB"))
 	statusStyle   = lipgloss.NewStyle().Background(brandPrimary).Foreground(surfaceBg).Padding(0, 2).Bold(true)
@@ -105,7 +120,7 @@ func defaultConfig() Config {
 		DefaultLang: "auto",
 		Sidebar:     SidebarConfig{WidthPercent: 25, Min: 20, Max: 40},
 		Theme: ThemeColors{
-			BrandPrimary: "#22d3ee",
+			BrandPrimary: "#ff007f",
 			SurfaceBg:    "#060608",
 			Surface3:     "#1c2130",
 			Text:         "#EBEBEB",
@@ -190,12 +205,20 @@ func applyConfig(cfg Config) {
 	modeBadgeStyle = lipgloss.NewStyle().Background(brandPrimary).Foreground(surfaceBg).Padding(0, 1).Bold(true)
 	infoBadgeStyle = lipgloss.NewStyle().Background(surface3).Foreground(brandPrimary).Padding(0, 1).Bold(true)
 	helpBadgeStyle = lipgloss.NewStyle().Background(surfaceBg).Foreground(lipgloss.Color("#888888")).Padding(0, 1)
+
+	// Inyectar el color de marca activo en el estilo de Glamour
+	primaryHex := string(brandPrimary)
+	if primaryHex == "" {
+		primaryHex = "#ff007f"
+	}
+	glamourStyle = []byte(strings.ReplaceAll(glamourStyleTemplate, "{{brandPrimary}}", primaryHex))
 }
 
 type mode int
 
 const (
-	modeList mode = iota
+	modeWelcome mode = iota
+	modeList
 	modeRead
 	modeLink
 )
@@ -427,7 +450,7 @@ var chapterNames = map[string]string{
 }
 
 func listAvailableArchs() []string {
-	entries, err := handbookFS.ReadDir("data/handbook")
+	entries, err := handbookFS.ReadDir(handbookRoot)
 	if err != nil {
 		return []string{"amd64"}
 	}
@@ -455,9 +478,9 @@ func (m *model) dataDir() string {
 		arch = m.archs[m.archIdx]
 	}
 	if m.lang == "" || m.lang == "en" {
-		return "data/handbook/" + arch
+		return getHandbookPath(arch)
 	}
-	return "data/handbook/" + arch + "/" + m.lang
+	return getHandbookPath(arch, m.lang)
 }
 
 func (m *model) rebuildList() {
@@ -469,7 +492,7 @@ func (m *model) rebuildList() {
 
 	entries, err := handbookFS.ReadDir(dataPath)
 	if err != nil && m.lang != "en" {
-		dataPath = "data/handbook/" + arch
+		dataPath = getHandbookPath(arch)
 		entries, err = handbookFS.ReadDir(dataPath)
 	}
 	if err != nil {
@@ -524,7 +547,7 @@ func (m *model) listAvailableLangs() []string {
 	if len(m.archs) > 0 && m.archIdx < len(m.archs) {
 		arch = m.archs[m.archIdx]
 	}
-	entries, err := handbookFS.ReadDir("data/handbook/" + arch)
+	entries, err := handbookFS.ReadDir(getHandbookPath(arch))
 	if err != nil {
 		return []string{"en"}
 	}
@@ -583,7 +606,7 @@ func initialModel() model {
 	d.Styles.SelectedTitle = selectedStyle
 	d.Styles.NormalTitle = lipgloss.NewStyle().PaddingLeft(2)
 
-	m := model{archs: archs, mode: modeList, lang: "en"}
+	m := model{archs: archs, mode: modeWelcome, lang: "en"}
 	m.langs = m.listAvailableLangs()
 
 	if cfg.DefaultArch != "auto" {
@@ -681,9 +704,9 @@ func (m *model) openChapter() {
 	if len(m.archs) > 0 && m.archIdx < len(m.archs) {
 		arch = m.archs[m.archIdx]
 	}
-	data, err := handbookFS.ReadFile(m.dataDir() + "/" + i.filename)
+	data, err := handbookFS.ReadFile(strings.Join([]string{m.dataDir(), i.filename}, "/"))
 	if err != nil && m.lang != "en" {
-		data, err = handbookFS.ReadFile("data/handbook/" + arch + "/" + i.filename)
+		data, err = handbookFS.ReadFile(getHandbookPath(arch, i.filename))
 	}
 	if err != nil {
 		log.Printf("read chapter %s: %v", i.filename, err)
@@ -691,7 +714,7 @@ func (m *model) openChapter() {
 	}
 
 	m.activeContent = langLinkRe.ReplaceAllString(string(data), "")
-	m.activeContent = editLinkRe.ReplaceAllString(m.activeContent, "")
+	m.activeContent = editLinkRe.ReplaceAllString(m.activeContent, " ")
 	m.extractLinks(m.activeContent)
 	m.renderChapter()
 	m.viewport.GotoTop()
@@ -703,6 +726,15 @@ func (m model) Init() tea.Cmd { return nil }
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.mode == modeWelcome {
+			if msg.String() == "q" || msg.String() == "ctrl+c" {
+				return m, tea.Quit
+			}
+			m.list.Select(0)
+			m.openChapter()
+			return m, nil
+		}
+
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
@@ -814,6 +846,9 @@ func (m model) View() string {
 	if !m.ready {
 		return ""
 	}
+	if m.mode == modeWelcome {
+		return m.welcomeView()
+	}
 
 	lw := sidebarWidth(m.width)
 	listRendered := m.list.View()
@@ -920,6 +955,84 @@ func (m model) View() string {
 	status = lipgloss.NewStyle().Background(surfaceBg).Width(statusWidth).Render(status)
 
 	return baseStyle.Render(lipgloss.JoinVertical(lipgloss.Top, row, status))
+}
+
+func (m model) welcomeView() string {
+	logo := `______     ______     __   __     ______   ______     ______          
+/\  ___\   /\  ___\   /\ "-.\ \   /\__  _\ /\  __ \   /\  __ \         
+\ \ \__ \  \ \  __\   \ \ \-.  \  \/_/\ \/ \ \ \/\ \  \ \ \/\ \        
+ \ \_____\  \ \_____\  \ \_\\"\_\    \ \_\  \ \_____\  \ \_____\       
+  \/_____/   \/_____/   \/_/ \/_/     \/_/   \/_____/   \/_____/       
+                                                                       
+ ______   __  __     __     ______     ______     ______     __  __    
+/\__  _\ /\ \/\ \   /\ \   /\  == \   /\  __ \   /\  __ \   /\ \/ /    
+\/_/\ \/ \ \ \_\ \  \ \ \  \ \  __<   \ \ \/\ \  \ \ \/\ \  \ \  _"-.  
+   \ \_\  \ \_____\  \ \_\  \ \_____\  \ \_____\  \ \_____\  \ \_\ \_\ 
+    \/_/   \/_____/   \/_/   \/_____/   \/_____/   \/_____/   \/_/\/_/`
+
+	logoStyled := lipgloss.NewStyle().Foreground(brandPrimary).Bold(true).Render(logo)
+
+	title := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#FFFFFF")).
+		Bold(true).
+		Render("Manual de Instalacion de Gentoo Linux en tu Terminal")
+
+	versionStr := "Version: v0.1.0"
+	fetchStr := fmt.Sprintf("Ultimo Fetch: %s", getLastFetchDate())
+	info := lipgloss.NewStyle().Foreground(lipgloss.Color("#888888")).Render(fmt.Sprintf("%s  \u2022  %s", versionStr, fetchStr))
+
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(surface3).
+		Padding(1, 4).
+		Width(65).
+		Align(lipgloss.Center)
+
+	shortcuts := `ATAJOS DE TECLADO RÁPIDOS
+
+ j / k / ↑ / ↓  : Navegar capítulos y scroll
+ Enter / l / →  : Abrir capítulo o activar enlace
+ h / ← / Esc    : Volver atrás (Lectura / Lista)
+ Tab / Shift+Tab: Ciclar enlaces en manual
+ a              : Cambiar arquitectura (amd64, arm64, etc.)
+ L (Shift+l)    : Cambiar idioma de los capítulos
+ q / Ctrl+C     : Salir de la aplicación`
+
+	shortcutsStyled := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#A3A3A3")).
+		Render(shortcuts)
+
+	box := boxStyle.Render(shortcutsStyled)
+
+	prompt := lipgloss.NewStyle().
+		Foreground(brandPrimary).
+		Bold(true).
+		Render("Presiona cualquier tecla para comenzar a leer...")
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
+		"",
+		logoStyled,
+		"",
+		title,
+		info,
+		"",
+		box,
+		"",
+		"",
+		prompt,
+		"",
+	)
+
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, content, lipgloss.WithWhitespaceBackground(surfaceBg))
+}
+
+func getLastFetchDate() string {
+	data, err := handbookFS.ReadFile(getHandbookPath("last_fetch.txt"))
+	if err != nil {
+		return defaultFetchDate
+	}
+	return strings.TrimSpace(string(data))
 }
 
 func initLogging() *os.File {

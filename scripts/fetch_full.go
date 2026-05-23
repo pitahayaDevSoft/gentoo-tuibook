@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 )
@@ -90,4 +91,8 @@ func main() {
 			fmt.Printf("  -> %s\n", path)
 		}
 	}
+
+	// Write last fetch date
+	fetchDate := time.Now().Format("2006-01-02")
+	os.WriteFile(filepath.Join("..", "data", "handbook", "last_fetch.txt"), []byte(fetchDate), 0644)
 }

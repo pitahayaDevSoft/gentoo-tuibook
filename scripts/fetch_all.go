@@ -147,5 +147,9 @@ func main() {
 		}
 	}
 
+	// Write last fetch date
+	fetchDate := time.Now().Format("2006-01-02")
+	os.WriteFile(filepath.Join("data", "handbook", "last_fetch.txt"), []byte(fetchDate), 0644)
+
 	fmt.Printf("\n=== Done: %d downloaded, %d skipped, %d failed ===\n", success, skipped, fails)
 }

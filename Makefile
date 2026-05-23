@@ -8,7 +8,8 @@ DESTDIR ?=
 # Go tools and flags
 GO ?= go
 GOFLAGS ?=
-LDFLAGS ?= -w -s
+VERSION = $(shell cat VERSION)
+LDFLAGS ?= -w -s -X main.Version=$(VERSION)
 
 BINARY = gentoo-tuibook
 
