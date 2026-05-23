@@ -850,6 +850,8 @@ func (m model) View() string {
 		return m.welcomeView()
 	}
 
+	loc := getUILocale(m.lang)
+
 	lw := sidebarWidth(m.width)
 	listRendered := m.list.View()
 
@@ -869,7 +871,7 @@ func (m model) View() string {
 		contentStr = lipgloss.NewStyle().
 			Width(vpWidth).
 			Foreground(lipgloss.Color("#666666")).
-			Render("\n\n  Select a chapter and press Enter\n\n  \u2191\u2193 navigate  \u00b7  Enter open  \u00b7  q quit")
+			Render(loc.selectChapter)
 	} else {
 		contentStr = viewStyle.Render(m.viewport.View())
 	}
@@ -901,7 +903,7 @@ func (m model) View() string {
 		}
 		infoPart = infoBadgeStyle.Render(fmt.Sprintf(" %s │ %s ", strings.ToUpper(archName), strings.ToUpper(lbl)))
 
-		helpPart = helpBadgeStyle.Render(" ↑↓ navigate  \u2022  Enter/l open  \u2022  q quit ")
+		helpPart = helpBadgeStyle.Render(fmt.Sprintf(" ↑↓ %s  \u2022  Enter/l %s  \u2022  q %s ", loc.helpNavigate, loc.helpOpen, loc.helpQuit))
 	} else if m.mode == modeRead {
 		modePart = modeBadgeStyle.Render(" READ ")
 
@@ -918,9 +920,9 @@ func (m model) View() string {
 
 		linkHelp := ""
 		if len(m.links) > 0 {
-			linkHelp = "  \u2022  l/Tab links"
+			linkHelp = fmt.Sprintf("  \u2022  l/Tab %s", loc.helpLinks)
 		}
-		helpPart = helpBadgeStyle.Render(fmt.Sprintf(" ↑↓/jk scroll  \u2022  h/← back%s  \u2022  q quit ", linkHelp))
+		helpPart = helpBadgeStyle.Render(fmt.Sprintf(" ↑↓/jk %s  \u2022  h/← %s%s  \u2022  q %s ", loc.helpScroll, loc.helpBack, linkHelp, loc.helpQuit))
 	} else if len(m.links) > 0 {
 		modePart = modeBadgeStyle.Render(" LINKS ")
 
@@ -937,7 +939,7 @@ func (m model) View() string {
 		}
 		infoPart = infoBadgeStyle.Render(fmt.Sprintf(" %d/%d │ [%s] %s ", m.linkIndex+1, len(m.links), kindLabel, label))
 
-		helpPart = helpBadgeStyle.Render(" ↑↓/Tab cycle  \u2022  Enter open  \u2022  h/Esc back  \u2022  q quit ")
+		helpPart = helpBadgeStyle.Render(fmt.Sprintf(" ↑↓/Tab %s  \u2022  Enter %s  \u2022  h/Esc %s  \u2022  q %s ", loc.helpCycle, loc.helpOpen, loc.helpBack, loc.helpQuit))
 	}
 
 	leftBar := lipgloss.JoinHorizontal(lipgloss.Top, modePart, infoPart)
@@ -957,6 +959,83 @@ func (m model) View() string {
 	return baseStyle.Render(lipgloss.JoinVertical(lipgloss.Top, row, status))
 }
 
+type uiLocales struct {
+	welcomeTitle      string
+	welcomeLastFetch  string
+	welcomeShortcuts  string
+	welcomeNav        string
+	welcomeOpen       string
+	welcomeBack       string
+	welcomeLinks      string
+	welcomeArch       string
+	welcomeLang       string
+	welcomeQuit       string
+	welcomePrompt     string
+
+	selectChapter     string
+	helpNavigate      string
+	helpOpen          string
+	helpQuit          string
+	helpScroll        string
+	helpBack          string
+	helpLinks         string
+	helpCycle         string
+}
+
+var uiTranslations = map[string]uiLocales{
+	"en": {
+		welcomeTitle:      "Gentoo Linux Installation Manual in your Terminal",
+		welcomeLastFetch:  "Last Fetch",
+		welcomeShortcuts:  "QUICK KEYBOARD SHORTCUTS",
+		welcomeNav:        " j / k / ↑ / ↓  : Navigate chapters and scroll",
+		welcomeOpen:       " Enter / l / →  : Open chapter or activate link",
+		welcomeBack:       " h / ← / Esc    : Go back (Reading / List)",
+		welcomeLinks:      " Tab / Shift+Tab: Cycle links in manual",
+		welcomeArch:       " a              : Change architecture (amd64, arm64, etc.)",
+		welcomeLang:       " L (Shift+l)    : Change chapter language",
+		welcomeQuit:       " q / Ctrl+C     : Exit application",
+		welcomePrompt:     "Press any key to start reading...",
+
+		selectChapter:     "\n\n  Select a chapter and press Enter\n\n  \u2191\u2193 navigate  \u00b7  Enter open  \u00b7  q quit",
+		helpNavigate:      "navigate",
+		helpOpen:          "open",
+		helpQuit:          "quit",
+		helpScroll:        "scroll",
+		helpBack:          "back",
+		helpLinks:         "links",
+		helpCycle:         "cycle",
+	},
+	"es": {
+		welcomeTitle:      "Manual de Instalación de Gentoo Linux en tu Terminal",
+		welcomeLastFetch:  "Último Fetch",
+		welcomeShortcuts:  "ATAJOS DE TECLADO RÁPIDOS",
+		welcomeNav:        " j / k / ↑ / ↓  : Navegar capítulos y scroll",
+		welcomeOpen:       " Enter / l / →  : Abrir capítulo o activar enlace",
+		welcomeBack:       " h / ← / Esc    : Volver atrás (Lectura / Lista)",
+		welcomeLinks:      " Tab / Shift+Tab: Ciclar enlaces en manual",
+		welcomeArch:       " a              : Cambiar arquitectura (amd64, arm64, etc.)",
+		welcomeLang:       " L (Shift+l)    : Cambiar idioma de los capítulos",
+		welcomeQuit:       " q / Ctrl+C     : Salir de la aplicación",
+		welcomePrompt:     "Presiona cualquier tecla para comenzar a leer...",
+
+		selectChapter:     "\n\n  Selecciona un capítulo y presiona Enter\n\n  \u2191\u2193 navegar  \u00b7  Enter abrir  \u00b7  q salir",
+		helpNavigate:      "navegar",
+		helpOpen:          "abrir",
+		helpQuit:          "salir",
+		helpScroll:        "desplazar",
+		helpBack:          "atrás",
+		helpLinks:         "enlaces",
+		helpCycle:         "ciclar",
+	},
+}
+
+func getUILocale(lang string) uiLocales {
+	if loc, ok := uiTranslations[lang]; ok {
+		return loc
+	}
+	return uiTranslations["en"]
+}
+
 func (m model) welcomeView() string {
 	logo := `______     ______     __   __     ______   ______     ______          
 /\  ___\   /\  ___\   /\ "-.\ \   /\__  _\ /\  __ \   /\  __ \         
@@ -972,13 +1051,15 @@ func (m model) welcomeView() string {
 
 	logoStyled := lipgloss.NewStyle().Foreground(brandPrimary).Bold(true).Render(logo)
 
+	loc := getUILocale(m.lang)
+
 	title := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#FFFFFF")).
 		Bold(true).
-		Render("Manual de Instalacion de Gentoo Linux en tu Terminal")
+		Render(loc.welcomeTitle)
 
 	versionStr := "Version: v0.1.0"
-	fetchStr := fmt.Sprintf("Ultimo Fetch: %s", getLastFetchDate())
+	fetchStr := fmt.Sprintf("%s: %s", loc.welcomeLastFetch, getLastFetchDate())
 	info := lipgloss.NewStyle().Foreground(lipgloss.Color("#888888")).Render(fmt.Sprintf("%s  \u2022  %s", versionStr, fetchStr))
 
 	boxStyle := lipgloss.NewStyle().
@@ -988,15 +1069,16 @@ func (m model) welcomeView() string {
 		Width(65).
 		Align(lipgloss.Center)
 
-	shortcuts := `ATAJOS DE TECLADO RÁPIDOS
-
- j / k / ↑ / ↓  : Navegar capítulos y scroll
- Enter / l / →  : Abrir capítulo o activar enlace
- h / ← / Esc    : Volver atrás (Lectura / Lista)
- Tab / Shift+Tab: Ciclar enlaces en manual
- a              : Cambiar arquitectura (amd64, arm64, etc.)
- L (Shift+l)    : Cambiar idioma de los capítulos
- q / Ctrl+C     : Salir de la aplicación`
+	shortcuts := fmt.Sprintf("%s\n\n%s\n%s\n%s\n%s\n%s\n%s\n%s",
+		loc.welcomeShortcuts,
+		loc.welcomeNav,
+		loc.welcomeOpen,
+		loc.welcomeBack,
+		loc.welcomeLinks,
+		loc.welcomeArch,
+		loc.welcomeLang,
+		loc.welcomeQuit,
+	)
 
 	shortcutsStyled := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#A3A3A3")).
@@ -1007,7 +1089,7 @@ func (m model) welcomeView() string {
 	prompt := lipgloss.NewStyle().
 		Foreground(brandPrimary).
 		Bold(true).
-		Render("Presiona cualquier tecla para comenzar a leer...")
+		Render(loc.welcomePrompt)
 
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
