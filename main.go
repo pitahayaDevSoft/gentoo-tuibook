@@ -150,6 +150,16 @@ func loadConfig() Config {
 		log.Printf("config parse: %v", err)
 		return defaultConfig()
 	}
+
+	// Migrar el viejo color cian por defecto (#22d3ee) al nuevo rosa Gentoo (#ff007f)
+	if cfg.Theme.BrandPrimary == "#22d3ee" {
+		cfg.Theme.BrandPrimary = "#ff007f"
+		updatedData, err := json.MarshalIndent(cfg, "", "  ")
+		if err == nil {
+			os.WriteFile(configPath(), updatedData, 0644)
+		}
+	}
+
 	return cfg
 }
 
