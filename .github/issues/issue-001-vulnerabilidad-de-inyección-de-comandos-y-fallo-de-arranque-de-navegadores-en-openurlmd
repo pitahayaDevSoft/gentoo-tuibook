@@ -1,0 +1,31 @@
+# ISSUE-001 // Vulnerabilidad de inyección de comandos y fallo de arranque de navegadores en openURL
+
+**Type**: Bug/Seguridad
+**Severity**: Media
+**Component**: Integración del SO
+
+---
+
+## 1. Descripción del Problema
+En entornos Windows, el método 'openURL' ejecuta un comando del sistema para abrir páginas web: `cmd.exe /c start <url>`. En Windows, el comando 'start' interpreta el primer parámetro entrecomillado que encuentra como el título de la consola. Si una URL contiene comillas, espacios o caracteres especiales como '&' (común en parámetros query), el comando se corrompe (intentando abrir una consola con dicho título) o, en el peor escenario, permite inyectar argumentos de sistema adicionales a cmd.
+
+## 2. Ubicación del Código
+- **Archivo**: [main.go](file:///K:/source/repos/gentoo-tuibook/main.go)
+- **Línea(s)**: 348-365
+
+## 3. Comportamiento Esperado vs. Comportamiento Actual
+- **Actual**: En entornos Windows, el método 'openURL' ejecuta un comando del sistema para abrir páginas web: `cmd.exe /c start <url>`. En Windows, el comando 'start' interpreta el primer parámetro entrecomillado que encuentra como el título de la consola. Si una URL contiene comillas, espacios o caracteres especiales como '&' (común en parámetros query), el comando se corrompe (intentando abrir una consola con dicho título) o, en el peor escenario, permite inyectar argumentos de sistema adicionales a cmd.
+- **Esperado**: El comando debe aislar correctamente la URL y usar un parámetro de título vacío en 'start' para asegurar la sanitización básica y la compatibilidad con URLs complejas.
+
+## 4. Pasos para Reproducir / Escenario Crítico
+1. Abrir un enlace que contenga caracteres de control web (ej. con ampersands o tokens).
+2. En Windows, observar que el navegador no abre o lanza una ventana de comandos con la URL escrita en la barra de título.
+
+## 5. Propuesta de Solución
+Modificar los parámetros en el dispatcher de Windows en Go para incluir una cadena vacía representativa del título:
+```go
+case "windows":
+    cmd = "cmd"
+    args = []string{"/c", "start", "", url}
+```
+Esto neutraliza la interpretación de la URL como nombre de ventana y evita fugas sintácticas.

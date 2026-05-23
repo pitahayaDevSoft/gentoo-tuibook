@@ -18,7 +18,7 @@
 ---
 
 <p align="center">
-  <img src="docs/assets/screenshot.png" alt="gentoo-tuibook in action" width="900" />
+  <img src="docs/shot.png" alt="gentoo-tuibook in action" width="900" />
 </p>
 
 ---
