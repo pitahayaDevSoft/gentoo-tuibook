@@ -24,15 +24,17 @@ import (
 var handbookFS embed.FS
 
 var (
-	editLinkRe  = regexp.MustCompile(`\\\[[ \t]*\[[ \t]*[Ee]dit[ \t]*\][ \t]*\([^)]*\)[ \t]*\\\]`)
-	langLinkRe  = regexp.MustCompile(`(?m)^Other languages:\n\n(?:- .*\n)+\n`)
+	editLinkRe     = regexp.MustCompile(`\\\[[ \t]*\[[ \t]*[Ee]dit[ \t]*\][ \t]*\([^)]*\)[ \t]*\\\]`)
+	langLinkRe     = regexp.MustCompile(`(?m)^Other languages:\n\n(?:- .*\n)+\n`)
+	markdownLinkRe = regexp.MustCompile(`\[([^\]]+)\]\(([^\s\)]+)(?:\s+"[^"]*")?\)`)
+	rawURLRe       = regexp.MustCompile(`https?://[^\s\)"]+`)
 
 	glamourStyle = []byte(`{
 		"document": { "block_prefix": "\n", "block_suffix": "\n", "color": "#EBEBEB", "margin": 1 },
 		"heading": { "block_suffix": "\n", "color": "#22d3ee", "bold": true },
-		"h1": { "prefix": " ", "suffix": " ", "color": "#22d3ee", "background_color": "#1c2130", "bold": true },
-		"h2": { "prefix": "\u2554 ", "color": "#22d3ee", "bold": true },
-		"h3": { "prefix": "\u2551 ", "color": "#22d3ee" },
+		"h1": { "prefix": " # ", "suffix": " ", "color": "#22d3ee", "background_color": "#1c2130", "bold": true },
+		"h2": { "prefix": " ## ", "color": "#22d3ee", "bold": true },
+		"h3": { "prefix": " ### ", "color": "#22d3ee" },
 		"strong": { "bold": true, "color": "#FFFFFF" },
 		"emph": { "italic": true, "color": "#94A3B8" },
 		"link": { "color": "#22d3ee", "underline": true },
@@ -50,14 +52,13 @@ var (
 			"keyword_type": { "color": "#B294BB" },
 			"name_class": { "color": "#FFFFFF", "underline": true, "bold": true },
 			"name_attribute": { "color": "#7A7AE6" },
-			"name_tag": { "color": "#B083EA" },
-			"background": { "background_color": "#121620" }
+			"name_tag": { "color": "#B083EA" }
 		}},
-		"item": { "block_prefix": "\u2022 ", "color": "#EBEBEB" },
+		"item": { "block_prefix": "- ", "color": "#EBEBEB" },
 		"enumeration": { "block_prefix": ". " },
-		"hr": { "color": "#22D3EE", "format": "\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n" },
-		"block_quote": { "color": "#6272A4", "indent": 1, "indent_token": "\u2502 " },
-		"table": { "center_separator": "\u253C", "column_separator": "\u2502", "row_separator": "\u2500" }
+		"hr": { "color": "#22D3EE" },
+		"block_quote": { "color": "#6272A4", "indent": 1, "indent_token": "| " },
+		"table": { "center_separator": "+", "column_separator": "|", "row_separator": "-" }
 	}`)
 
 	surfaceBg    = lipgloss.Color("#060608")
@@ -67,6 +68,11 @@ var (
 	baseStyle     = lipgloss.NewStyle().Background(surfaceBg).Foreground(lipgloss.Color("#EBEBEB"))
 	statusStyle   = lipgloss.NewStyle().Background(brandPrimary).Foreground(surfaceBg).Padding(0, 2).Bold(true)
 	selectedStyle = lipgloss.NewStyle().Foreground(brandPrimary).Bold(true)
+
+	// Estilos segmentados de la barra de estado skeuomórfica
+	modeBadgeStyle = lipgloss.NewStyle().Background(brandPrimary).Foreground(surfaceBg).Padding(0, 1).Bold(true)
+	infoBadgeStyle = lipgloss.NewStyle().Background(surface3).Foreground(brandPrimary).Padding(0, 1).Bold(true)
+	helpBadgeStyle = lipgloss.NewStyle().Background(surfaceBg).Foreground(lipgloss.Color("#888888")).Padding(0, 1)
 
 	sidebarCfg = SidebarConfig{WidthPercent: 25, Min: 20, Max: 40}
 )
@@ -179,6 +185,11 @@ func applyConfig(cfg Config) {
 	baseStyle = lipgloss.NewStyle().Background(surfaceBg).Foreground(textColor)
 	statusStyle = lipgloss.NewStyle().Background(brandPrimary).Foreground(surfaceBg).Padding(0, 2).Bold(true)
 	selectedStyle = lipgloss.NewStyle().Foreground(brandPrimary).Bold(true)
+
+	// Sincronizar estilos de la barra de estado segmentada
+	modeBadgeStyle = lipgloss.NewStyle().Background(brandPrimary).Foreground(surfaceBg).Padding(0, 1).Bold(true)
+	infoBadgeStyle = lipgloss.NewStyle().Background(surface3).Foreground(brandPrimary).Padding(0, 1).Bold(true)
+	helpBadgeStyle = lipgloss.NewStyle().Background(surfaceBg).Foreground(lipgloss.Color("#888888")).Padding(0, 1)
 }
 
 type mode int
@@ -275,8 +286,7 @@ func (m *model) scrollToLink(l link) {
 func (m *model) extractLinks(content string) {
 	seen := make(map[string]bool)
 
-	re := regexp.MustCompile(`\[([^\]]+)\]\(([^\s\)]+)(?:\s+"[^"]*")?\)`)
-	matches := re.FindAllStringSubmatch(content, -1)
+	matches := markdownLinkRe.FindAllStringSubmatch(content, -1)
 	m.links = make([]link, 0, len(matches)+8)
 
 	for _, match := range matches {
@@ -307,8 +317,7 @@ func (m *model) extractLinks(content string) {
 		}
 	}
 
-	re2 := regexp.MustCompile(`https?://[^\s\)"]+`)
-	for _, url := range re2.FindAllString(content, -1) {
+	for _, url := range rawURLRe.FindAllString(content, -1) {
 		if seen[url] {
 			continue
 		}
@@ -456,10 +465,7 @@ func (m *model) rebuildList() {
 	if len(m.archs) > 0 && m.archIdx < len(m.archs) {
 		arch = m.archs[m.archIdx]
 	}
-	dataPath := "data/handbook/" + arch
-	if m.lang != "" && m.lang != "en" {
-		dataPath += "/" + m.lang
-	}
+	dataPath := m.dataDir()
 
 	entries, err := handbookFS.ReadDir(dataPath)
 	if err != nil && m.lang != "en" {
@@ -620,7 +626,7 @@ func (m *model) renderChapter() {
 	renderer, err := glamour.NewTermRenderer(
 		glamour.WithStylesFromJSONBytes(glamourStyle),
 		glamour.WithWordWrap(ww),
-		glamour.WithColorProfile(termenv.TrueColor),
+		glamour.WithColorProfile(termenv.ColorProfile()),
 	)
 	if err != nil {
 		log.Printf("glamour renderer: %v", err)
@@ -719,11 +725,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "up", "k":
 			if m.mode == modeLink {
 				m.cycleLinkPrev()
+			} else if m.mode == modeRead {
+				m.viewport.LineUp(1)
 			}
 
 		case "down", "j":
 			if m.mode == modeLink {
 				m.cycleLinkNext()
+			} else if m.mode == modeRead {
+				m.viewport.LineDown(1)
 			}
 
 		case "a":
@@ -736,8 +746,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.switchLang()
 			}
 
-		case "l":
-			if m.mode == modeRead && len(m.links) > 0 {
+		case "l", "right":
+			if m.mode == modeList {
+				m.openChapter()
+			} else if m.mode == modeRead && len(m.links) > 0 {
 				m.mode = modeLink
 				m.scrollToLink(m.links[m.linkIndex])
 			}
@@ -754,7 +766,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				openURL(m.links[m.linkIndex].url)
 			}
 
-		case "left", "esc":
+		case "left", "h", "esc":
 			if m.mode == modeLink {
 				m.mode = modeRead
 			} else if m.mode == modeRead {
@@ -817,19 +829,6 @@ func (m model) View() string {
 	}
 	viewStyle := lipgloss.NewStyle().Width(vpWidth)
 
-	archHint := ""
-	if len(m.archs) > 1 {
-		archHint = " \u2502 a arch"
-	}
-	langHint := ""
-	if len(m.langs) > 1 {
-		lbl := m.lang
-		if lbl == "en" {
-			lbl = "EN"
-		}
-		langHint = fmt.Sprintf(" \u2502 L %s", lbl)
-	}
-
 	var contentStr string
 	if m.activeContent == "" {
 		contentStr = lipgloss.NewStyle().
@@ -843,15 +842,53 @@ func (m model) View() string {
 	row := lipgloss.JoinHorizontal(lipgloss.Top, listRendered, borderRendered, contentStr)
 
 	var status string
+	statusWidth := m.width
+	if statusWidth < 10 {
+		statusWidth = 80
+	}
+
+	var modePart, infoPart, helpPart string
+
 	if m.mode == modeList {
-		status = statusStyle.Render(fmt.Sprintf(" [ LIST ] \u2191\u2193 navigate%s%s \u2502  Enter open  \u2502  q quit ", langHint, archHint))
-	} else if m.mode == modeRead {
-		linkHint := ""
-		if len(m.links) > 0 {
-			linkHint = " \u2502 l links"
+		modePart = modeBadgeStyle.Render(" LIST ")
+
+		arch := "amd64"
+		if len(m.archs) > 0 && m.archIdx < len(m.archs) {
+			arch = m.archs[m.archIdx]
 		}
-		status = statusStyle.Render(fmt.Sprintf(" [ READ ] \u2191\u2193 scroll%s%s%s \u2502 \u2190 back  \u2502 q quit ", linkHint, langHint, archHint))
+		archName := archNames[arch]
+		if archName == "" {
+			archName = strings.ToUpper(arch)
+		}
+		lbl := m.lang
+		if lbl == "en" {
+			lbl = "EN"
+		}
+		infoPart = infoBadgeStyle.Render(fmt.Sprintf(" %s │ %s ", strings.ToUpper(archName), strings.ToUpper(lbl)))
+
+		helpPart = helpBadgeStyle.Render(" ↑↓ navigate  \u2022  Enter/l open  \u2022  q quit ")
+	} else if m.mode == modeRead {
+		modePart = modeBadgeStyle.Render(" READ ")
+
+		var title string
+		if item, ok := m.list.SelectedItem().(item); ok {
+			title = item.title
+			if len(title) > 25 {
+				title = title[:22] + "..."
+			}
+		} else {
+			title = "Handbook"
+		}
+		infoPart = infoBadgeStyle.Render(fmt.Sprintf(" %s ", title))
+
+		linkHelp := ""
+		if len(m.links) > 0 {
+			linkHelp = "  \u2022  l/Tab links"
+		}
+		helpPart = helpBadgeStyle.Render(fmt.Sprintf(" ↑↓/jk scroll  \u2022  h/← back%s  \u2022  q quit ", linkHelp))
 	} else if len(m.links) > 0 {
+		modePart = modeBadgeStyle.Render(" LINKS ")
+
 		l := m.links[m.linkIndex]
 		kindLabel := "URL"
 		if l.kind == linkChapter {
@@ -860,15 +897,47 @@ func (m model) View() string {
 			kindLabel = "Anchor"
 		}
 		label := l.text
-		if len(label) > 40 {
-			label = label[:37] + "..."
+		if len(label) > 30 {
+			label = label[:27] + "..."
 		}
-		status = statusStyle.Render(fmt.Sprintf(" [ LINKS %d/%d ] [%s] %s \u2502 \u2191\u2193/Tab  \u2502 Enter open  \u2502 Esc back ", m.linkIndex+1, len(m.links), kindLabel, label))
+		infoPart = infoBadgeStyle.Render(fmt.Sprintf(" %d/%d │ [%s] %s ", m.linkIndex+1, len(m.links), kindLabel, label))
+
+		helpPart = helpBadgeStyle.Render(" ↑↓/Tab cycle  \u2022  Enter open  \u2022  h/Esc back  \u2022  q quit ")
 	}
+
+	leftBar := lipgloss.JoinHorizontal(lipgloss.Top, modePart, infoPart)
+
+	leftWidth := lipgloss.Width(leftBar)
+	helpWidth := lipgloss.Width(helpPart)
+	space := statusWidth - leftWidth - helpWidth
+	if space < 0 {
+		space = 0
+	}
+
+	spacer := lipgloss.NewStyle().Background(surfaceBg).Render(strings.Repeat(" ", space))
+
+	status = lipgloss.JoinHorizontal(lipgloss.Top, leftBar, spacer, helpPart)
+	status = lipgloss.NewStyle().Background(surfaceBg).Width(statusWidth).Render(status)
 
 	return baseStyle.Render(lipgloss.JoinVertical(lipgloss.Top, row, status))
 }
 
+func initLogging() *os.File {
+	ensureConfig()
+	logPath := filepath.Join(configDir(), "debug.log")
+	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return nil
+	}
+	log.SetOutput(file)
+	log.Println("--- gentoo-tuibook session started ---")
+	return file
+}
+
 func main() {
+	logFile := initLogging()
+	if logFile != nil {
+		defer logFile.Close()
+	}
 	tea.NewProgram(initialModel(), tea.WithAltScreen()).Run()
 }

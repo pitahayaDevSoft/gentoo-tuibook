@@ -81,16 +81,40 @@ go install github.com/gentoo-tuibook@latest
 go install github.com/gentoo-tuibook@latest
 ```
 
-### From Source
+### From Source (Natively)
+
+You can build and install the binary natively on Linux or UNIX-like systems using the standard `Makefile`:
 
 ```bash
-git clone https://github.com/user/gentoo-tuibook.git
+git clone https://github.com/julesklord/gentoo-tuibook.git
 cd gentoo-tuibook
-go build -o gentoo-tuibook.exe .
-# Binary at: ./gentoo-tuibook.exe
+make build
+# Binary at: ./gentoo-tuibook
 ```
 
----
+To install the binary globally to `/usr/local/bin`:
+
+```bash
+sudo make install
+```
+
+### Via Gentoo Portage (ebuild)
+
+If you are running Gentoo Linux, you can install it using the ebuild provided in the repository. Add the ebuild to your local overlay:
+
+```bash
+# Create category directory in your local overlay
+sudo mkdir -p /usr/local/portage/app-text/gentoo-tuibook
+
+# Copy the ebuild into it
+sudo cp ebuild/app-text/gentoo-tuibook/gentoo-tuibook-9999.ebuild /usr/local/portage/app-text/gentoo-tuibook/
+
+# Generate digest / manifest
+sudo ebuild /usr/local/portage/app-text/gentoo-tuibook/gentoo-tuibook-9999.ebuild manifest
+
+# Emerge the package
+sudo emerge --ask app-text/gentoo-tuibook
+```
 
 ## Key Features
 
@@ -99,8 +123,8 @@ go build -o gentoo-tuibook.exe .
 *   **Link Extraction**: Extracts and cycles through URLs in handbook content for quick browser access.
 *   **Mode Switching**: Toggle between navigation mode (LISTA) and reading mode (READ) with link focus.
 *   **Embedded Content**: Eleven handbook chapters embedded directly into the binary via `//go:embed`.
-*   **Scriptable Content Fetch**: Two Go scripts in `scripts/` to pull fresh content from the Gentoo wiki API.
-*   **Dual App Generations**: Alternate Green-themed version available via `build.py` codegen.
+*   **Scriptable Content Fetch**: Standalone Go scripts in `scripts/` to pull fresh content from the Gentoo wiki API.
+*   **Highly Configurable**: Supports robust, runtime-customizable theme colors and sidebar sizes via `$XDG_CONFIG_HOME/gentoo-tuibook/config.json`.
 
 ---
 
@@ -131,8 +155,7 @@ graph TD
 ### Core Components
 
 - **`github.com/gentoo-tuibook`**: Main `package main` with Bubbletea model/view/update loop, chapter list, viewport, link extraction, and Glamour-based Markdown rendering.
-- **`build.py`**: Codegen script that regenerates `main.go` with an alternate (green-themed) version of the app.
-- **`scripts/fetch.go` and `scripts/fetch_full.go`**: Standalone Go scripts that pull HTML from the Gentoo wiki API and convert to Markdown.
+- **`scripts/fetch.go`, `scripts/fetch_full.go` and `scripts/fetch_all.go`**: Standalone Go scripts that pull HTML from the Gentoo wiki API and convert to Markdown.
 
 ---
 
@@ -140,7 +163,7 @@ graph TD
 
 - **Flat `main` package over multi-package layout:** No server, no API, no multi-package logic justifies a single `package main`. Keeps compilation trivial and dependency graph minimal.
 - **Embedded content over HTTP fetch at runtime:** The handbook changes slowly. Embedding makes the binary self-contained and offline-ready.
-- **`build.py` codegen over feature flags:** Two UI generations coexist; the codegen script replaces `main.go` wholesale rather than adding conditional branches.
+- **Runtime Configuration over Build-time hacks:** Themes, layout size and defaults are dynamically configurable in runtime via the JSON config file. This guarantees clean compile cycles and zero friction for packages maintainers.
 
 ---
 
@@ -154,14 +177,69 @@ For a comprehensive breakdown, see the **[Official Docs](docs/wiki/index.md)**.
 
 ### Keyboard Shortcuts
 
+Our navigation system utilizes visual directional mappings and Vim-inspired shortcuts:
+
 | Key | Mode | Action |
 | :--- | :--- | :--- |
-| `↑/↓` | Navigation | Move chapter selection |
-| `Enter` | Navigation | Open selected chapter |
-| `r` | Reading | Enter read mode (link focus) |
-| `Tab` | Reading | Cycle through extracted links |
-| `Esc` | Both | Return to navigation mode |
-| `q` / `Ctrl+C` | Both | Quit application |
+| `↑/↓` or `k/j` | All Modes | Move selection (LIST), scroll manual text (READ), cycle through links (LINKS) |
+| `Enter` or `l`/`Right` | List Mode | Open selected chapter |
+| `l`, `Right`, or `Tab` | Read Mode | Enter Markdown link navigation mode |
+| `Enter` | Link Mode | Open/follow selected hyperlink |
+| `o` | Link Mode | Open selected external URL in browser |
+| `h`, `Left`, or `Esc` | Read / Link | Go back to list mode / go back to read mode |
+| `q` or `Ctrl+C` | All Modes | Quit application safely |
+
+---
+
+## Advanced Gentoo Linux Specifications
+
+`gentoo-tuibook` is engineered specifically with **Gentoo Linux**'s strict minimalist, compiler-first philosophy in mind. Here are the advanced details of the TUI architecture and packaging internals:
+
+### 1. Universal Terminal Portability (TTY & SSH)
+- **Dynamic Color Profile Detection**: Rather than forcing TrueColor (24-bit ANSI), the program calls `termenv.ColorProfile()` during runtime initialization to query the active stdout descriptor.
+  - On **Modern Emulators**, it renders full high-fidelity HSL tailored colors.
+  - On **Virtual Linux Consoles (native kernel TTYs)** or **SSH sessions**, it intelligently degrades and maps hex codes gracefully to standard ANSI 16/256 color sequences. This guarantees no visual clutter or broken escape codes during the Gentoo installation stage.
+- **UTF-8 Immunity (ASCII Safe Fallbacks)**: Headings, rules (`hr`), and table boundaries avoid exotic, high-plane Unicode characters.
+  - Structural blocks utilize fallback-safe tokens (`#`, `##`, `###`, `-`, `|`, `+`).
+  - This ensures perfect rendering on systems that have not yet loaded local fonts or Unicode support in early boot stages.
+
+### 2. TUI-Safe Logging Architecture
+- Logging directly to Stdout/Stderr corrupts the Bubble Tea alternate screen buffer. To prevent visual garbage, `gentoo-tuibook` utilizes a robust log redirection layout:
+  - All standard logger commands (`log.Printf`, system failures, etc.) are redirected dynamically to a physical file: `$XDG_CONFIG_HOME/gentoo-tuibook/debug.log`.
+  - Config directory and log creation follow XDG base directory specifications.
+
+### 3. Portage Integration & Custom Ebuilds
+The repository includes a Portage-compliant ebuild: [gentoo-tuibook-9999.ebuild](file:///K:/source/repos/gentoo-tuibook/ebuild/app-text/gentoo-tuibook/gentoo-tuibook-9999.ebuild).
+
+#### How the Live Ebuild (`9999`) works:
+- Uses `git-r3` and `go-module` eclasses.
+- In the `src_unpack` phase, Portage calls `go-module_live_vendor` to download all Go dependency modules safely through the proxy under internet access before locking the network sandbox.
+- In `src_compile`, Portage calls our clean native `Makefile`:
+  ```bash
+  emake GOFLAGS="-mod=vendor" build
+  ```
+- In `src_install`, Portage runs `emake DESTDIR="${D}" PREFIX="/usr" install` to place the binary under the correct target image filesystem.
+
+#### Freezing a Stable Version:
+To lock down a stable release (e.g. `v1.0.0`) in your local overlay, simply copy the ebuild:
+```bash
+cp gentoo-tuibook-9999.ebuild gentoo-tuibook-1.0.0.ebuild
+```
+Portage will automatically intercept the version number, ignore the live branch, and fetch/compile the corresponding tag/release tarball from Git.
+
+### 4. Updating Content Lifecycle
+If the official Gentoo handbook updates on the wiki, you can easily refresh the embedded database without modifying Go code:
+1. **Execute Fetch Scripts**:
+   ```bash
+   cd scripts
+   go run fetch_all.go
+   ```
+   This script calls the official Gentoo Wiki API, downloads the newest contents, converts HTML to clean Markdown, and overwrites `data/handbook/` MD files.
+2. **Recompile**:
+   ```bash
+   make build
+   ```
+   Go's `//go:embed` directive will automatically bake the updated contents directly inside the binary during compilation.
 
 ---
 
